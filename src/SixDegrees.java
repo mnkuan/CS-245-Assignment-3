@@ -35,8 +35,9 @@ public class SixDegrees {
         String[] values = line.split(",");
 
         for (String val : values) {
+          Pattern p = Pattern.compile("\"\"name\"\": \"\"(.+?)\"\"");
+
           if (val.contains("name")) {
-            Pattern p = Pattern.compile("\"\"name\"\": \"\"(.+?)\"\"");
             Matcher m = p.matcher(val);
 
             // Regex add names
@@ -44,11 +45,20 @@ public class SixDegrees {
               coActors.add(m.group(1));
             }
           } else if (val.contains("}]")) {
-            // Add coActors associated with the actor
-            for (String actor : coActors) {
-              actors.put(actor, coActors);
+            Set<String> temp = new HashSet<>(coActors);
 
-//              actors.get(actor).remove(actor);
+            for (String actor : coActors) {
+              if (actors.containsKey(actor)) {
+                // Add existing coActors
+                for (String existingCoActor : actors.get(actor)) {
+                  temp.add(existingCoActor);
+                }
+              }
+
+              // Add coActors associated with the actor
+              for (String newCoActors : coActors) {
+                actors.put(newCoActors, coActors);
+              }
             }
 
             break; // Avoid crews
