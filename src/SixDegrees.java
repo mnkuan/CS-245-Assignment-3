@@ -24,7 +24,6 @@ public class SixDegrees {
    * @throws IOException
    */
   public void storeNames(String file) throws FileNotFoundException, IOException {
-
     try (BufferedReader br = new BufferedReader(new FileReader(file))) {
       String line;
 
@@ -32,9 +31,7 @@ public class SixDegrees {
       while ((line = br.readLine()) != null) {
         Set<String> coActors = new HashSet<>();
 
-        String[] values = line.split(",");
-
-        for (String val : values) {
+        for (String val : line.split(",")) {
           Pattern p = Pattern.compile("\"\"name\"\": \"\"(.+?)\"\"");
 
           if (val.contains("name")) {
@@ -47,6 +44,7 @@ public class SixDegrees {
           } else if (val.contains("}]")) {
             Set<String> temp = new HashSet<>(coActors);
 
+            // Add coActors to actors
             for (String actor : coActors) {
               if (actors.containsKey(actor)) {
                 // Add existing coActors
@@ -55,13 +53,14 @@ public class SixDegrees {
                 }
               }
 
-              // Add coActors associated with the actor
+              // Add coActors associated (+existing) with the actor
               for (String newCoActors : coActors) {
-                actors.put(newCoActors, coActors);
+                actors.put(newCoActors, temp);
               }
             }
 
-            break; // Avoid crews
+            // Avoid crews
+            break;
           }
         }
       }
