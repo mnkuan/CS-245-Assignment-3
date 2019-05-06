@@ -1,12 +1,21 @@
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 public class SixDegrees {
   /** Stores the actor -> worked with actors */
@@ -22,58 +31,39 @@ public class SixDegrees {
    * @param file the file that is read
    * @throws FileNotFoundException
    * @throws IOException
+   * @throws ParseException
+   * @throws InterruptedException
    */
-  public void storeNames(String file) throws FileNotFoundException, IOException {
-    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-      String line;
+  public void storeNames(Path file) throws FileNotFoundException, IOException, ParseException, InterruptedException {
+    try (BufferedReader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8);
+        CSVParser csvParser = new CSVParser(reader,
+            CSVFormat.DEFAULT.withHeader("movie_id", "title", "cast", "crew").withFirstRecordAsHeader().withTrim());) {
+      JSONParser parser = new JSONParser();
 
       // Read each line
-      while ((line = br.readLine()) != null) {
-        Set<String> coActors = new HashSet<>();
+      for (CSVRecord csv : csvParser) {
+        JSONArray arr = (JSONArray) parser.parse(csv.get("cast"));
+        Iterator iter = arr.iterator();
 
-        for (String val : line.split(",")) {
-          Pattern p = Pattern.compile("\"\"name\"\": \"\"(.+?)\"\"");
-
-          if (val.contains("name")) {
-            Matcher m = p.matcher(val);
-
-            // Regex add names
-            while (m.find()) {
-              coActors.add(m.group(1));
-            }
-          } else if (val.contains("}]")) {
-            Set<String> temp = new HashSet<>(coActors);
-
-            // Add coActors to actors
-            for (String actor : coActors) {
-              if (actors.containsKey(actor)) {
-                // Add existing coActors
-                for (String existingCoActor : actors.get(actor)) {
-                  temp.add(existingCoActor);
-                }
-              }
-
-              // Add coActors associated (+existing) with the actor
-              for (String newCoActors : coActors) {
-                actors.put(newCoActors, temp);
-              }
-            }
-
-            // Avoid crews
-            break;
-          }
+        // Read each content (name) in the array
+        while (iter.hasNext()) {
+          JSONObject jObj = new JSONObject();
+          jObj = (JSONObject) iter.next();
+          //jObj.get("name");
+          
+          System.out.println(jObj.get("name"));
         }
       }
     }
   }
 
   public static void main(String[] args) {
-    String path = args[0];
+    Path path = Paths.get(args[0]);
     SixDegrees SD = new SixDegrees();
 
     try {
       SD.storeNames(path);
-    } catch (IOException e) {
+    } catch (IOException | ParseException | InterruptedException e) {
       e.printStackTrace();
     }
 
