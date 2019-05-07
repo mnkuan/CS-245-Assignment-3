@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Scanner;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -18,29 +19,6 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 public class SixDegrees {
-
-  /**
-   * Counts actors
-   * 
-   * @param file the file to read
-   * 
-   * @return the amount of actors
-   * @throws IOException
-   */
-  public int countActors(Path file) throws IOException {
-    int amtActors = 0;
-
-    try (BufferedReader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8);
-        CSVParser csvParser = new CSVParser(reader,
-            CSVFormat.DEFAULT.withHeader("movie_id", "title", "cast", "crew").withFirstRecordAsHeader().withTrim());) {
-
-      for (CSVRecord csv : csvParser) {
-        amtActors++;
-      }
-    }
-
-    return amtActors;
-  }
 
   /**
    * Reads the names of the actors in a file
@@ -75,8 +53,6 @@ public class SixDegrees {
           for (int j = 0; j < actors.size(); j++) {
             if (actors.get(i) != actors.get(j)) {
               graph.addActors(actors.get(i), actors.get(j));
-
-              // System.out.println(graph.getCoActors(actors.get(j)));
             }
           }
         }
@@ -89,12 +65,25 @@ public class SixDegrees {
     SixDegrees SD = new SixDegrees();
     adjListGraph graph = new adjListGraph();
 
-    try {
+    try (Scanner scanner = new Scanner(System.in);) {
+      String actor1;
+      String actor2;
+
       SD.storeNames(path, graph);
-      // graph.printGraph();
-      for (String msg : graph.neighbors("Abigail Breslin")) {
-        System.out.println(msg);
-      }
+
+      graph.printGraph();
+
+      System.out.print("Actor 1 name: ");
+      actor1 = scanner.nextLine();
+
+      System.out.print("Actor 2 name: ");
+      actor2 = scanner.nextLine();
+
+      graph.BFS(actor1, actor2);
+
+//      for (String msg : graph.neighbors("Abigail Breslin")) {
+//        System.out.println(msg);
+//      }
     } catch (IOException | ParseException e) {
       e.printStackTrace();
     }
