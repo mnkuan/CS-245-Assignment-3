@@ -5,9 +5,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.Set;
+import java.util.List;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -18,11 +18,28 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 public class SixDegrees {
-  /** Stores the actor -> worked with actors */
-  public HashMap<String, Set<String>> actors;
 
-  public SixDegrees() {
-    actors = new HashMap<>();
+  /**
+   * Counts actors
+   * 
+   * @param file the file to read
+   * 
+   * @return the amount of actors
+   * @throws IOException
+   */
+  public int countActors(Path file) throws IOException {
+    int amtActors = 0;
+
+    try (BufferedReader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8);
+        CSVParser csvParser = new CSVParser(reader,
+            CSVFormat.DEFAULT.withHeader("movie_id", "title", "cast", "crew").withFirstRecordAsHeader().withTrim());) {
+
+      for (CSVRecord csv : csvParser) {
+        amtActors++;
+      }
+    }
+
+    return amtActors;
   }
 
   /**
@@ -32,9 +49,8 @@ public class SixDegrees {
    * @throws FileNotFoundException
    * @throws IOException
    * @throws ParseException
-   * @throws InterruptedException
    */
-  public void storeNames(Path file) throws FileNotFoundException, IOException, ParseException, InterruptedException {
+  public void storeNames(Path file, adjListGraph graph) throws IOException, ParseException {
     try (BufferedReader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8);
         CSVParser csvParser = new CSVParser(reader,
             CSVFormat.DEFAULT.withHeader("movie_id", "title", "cast", "crew").withFirstRecordAsHeader().withTrim());) {
@@ -42,6 +58,7 @@ public class SixDegrees {
 
       // Read each line
       for (CSVRecord csv : csvParser) {
+        List<String> actors = new ArrayList<>();
         JSONArray arr = (JSONArray) parser.parse(csv.get("cast"));
         Iterator iter = arr.iterator();
 
@@ -49,9 +66,19 @@ public class SixDegrees {
         while (iter.hasNext()) {
           JSONObject jObj = new JSONObject();
           jObj = (JSONObject) iter.next();
-          //jObj.get("name");
-          
-          System.out.println(jObj.get("name"));
+
+          actors.add((String) jObj.get("name"));
+        }
+
+        // Add actors to list
+        for (int i = 0; i < actors.size(); i++) {
+          for (int j = 0; j < actors.size(); j++) {
+            if (actors.get(i) != actors.get(j)) {
+              graph.addActors(actors.get(i), actors.get(j));
+
+              // System.out.println(graph.getCoActors(actors.get(j)));
+            }
+          }
         }
       }
     }
@@ -60,16 +87,18 @@ public class SixDegrees {
   public static void main(String[] args) {
     Path path = Paths.get(args[0]);
     SixDegrees SD = new SixDegrees();
+    adjListGraph graph = new adjListGraph();
 
     try {
-      SD.storeNames(path);
-    } catch (IOException | ParseException | InterruptedException e) {
+      SD.storeNames(path, graph);
+      // graph.printGraph();
+      for (String msg : graph.neighbors("Abigail Breslin")) {
+        System.out.println(msg);
+      }
+    } catch (IOException | ParseException e) {
       e.printStackTrace();
     }
 
-    for (String actor : SD.actors.keySet()) {
-      System.out.println(actor + " = " + SD.actors.get(actor));
-    }
     System.out.println();
   }
 }
