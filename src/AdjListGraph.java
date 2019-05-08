@@ -119,9 +119,18 @@ public class AdjListGraph {
     // Prevents checking the same actor again
     HashSet<String> visited = new HashSet<>();
 
-    // If the name is null/empty, return null
-    if (actor1.isEmpty() || actor2.isEmpty()) {
+    // If the name is null/empty or the name does not exist, return null
+    if (actor1.isEmpty() || actor2.isEmpty() || !adjList.containsKey(actor1) || !adjList.containsKey(actor2)) {
       return null;
+    }
+    
+    // If the actor is the same name
+    if (actor1.toLowerCase().equals(actor2.toLowerCase())) {
+      for (String actor : adjList.keySet()) {
+        if (actor.toLowerCase().equals(actor1.toLowerCase())) {
+          return new Node(actor, null);
+        }
+      }
     }
 
     // Add the first actor
