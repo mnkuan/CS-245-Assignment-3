@@ -20,7 +20,7 @@ public class SixDegrees {
   public static void main(String[] args) {
     Path path = Paths.get(args[0]);
 
-    adjListGraph graph = new adjListGraph();
+    AdjListGraph graph = new AdjListGraph();
 
     try (Scanner scanner = new Scanner(System.in);) {
       String actor1;

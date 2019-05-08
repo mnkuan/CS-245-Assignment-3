@@ -26,13 +26,13 @@ import org.json.simple.parser.ParseException;
  * 
  * @author Marco
  */
-public class adjListGraph {
+public class AdjListGraph {
 
   /** The list of the actors where Actor -> CoActors */
   private Map<String, Set<String>> adjList;
 
   /** Constructor */
-  public adjListGraph() {
+  public AdjListGraph() {
     adjList = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
   }
 
