@@ -7,5 +7,6 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Simple JSON"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/CSV Reader"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
